@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/Gustcat/archiver_170725/internal/api/handler"
 	"github.com/Gustcat/archiver_170725/internal/config"
 	"github.com/Gustcat/archiver_170725/internal/logger"
+	taskRepo "github.com/Gustcat/archiver_170725/internal/repository/task"
+	taskService "github.com/Gustcat/archiver_170725/internal/service/task"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log/slog"
@@ -29,10 +32,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	repo := taskRepo.NewRepo()
+
+	service := taskService.NewServ(repo)
+	h := handler.NewHandler(service)
+
 	log.Debug("Try to setup router")
 	router := gin.New()
 
 	router.Use(gin.Recovery())
+
+	r := router.Group("/api/v1/tasks")
+	{
+		r.POST("/", h.Create)
+		r.GET("/:id", h.Get)
+		r.PATCH("/:id", h.Update)
+	}
 
 	srv := &http.Server{
 		Addr:         conf.Address,
