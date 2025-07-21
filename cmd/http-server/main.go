@@ -34,7 +34,7 @@ func main() {
 
 	repo := taskRepo.NewRepo()
 
-	service := taskService.NewServ(repo)
+	service := taskService.NewServ(repo, conf)
 	h := handler.NewHandler(service)
 
 	log.Debug("Try to setup router")
@@ -42,7 +42,7 @@ func main() {
 
 	router.Use(gin.Recovery())
 
-	r := router.Group("/api/v1/tasks")
+	r := router.Group(config.TaskGroupUrl)
 	{
 		r.POST("/", h.Create)
 		r.GET("/:id", h.Get)

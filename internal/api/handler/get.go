@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Gustcat/archiver_170725/internal/logger"
 	"github.com/Gustcat/archiver_170725/internal/model"
 	"github.com/Gustcat/archiver_170725/internal/repository/task"
@@ -26,15 +27,16 @@ func (h *Handler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response.Error("invalid url-parameter: id"))
 		return
 	}
+	fmt.Printf("get-method id: %s", taskId.ID)
 
 	taskResult, err := h.service.Get(ctx, taskId.ID)
 	if errors.Is(err, task.ErrTaskNotFound) {
-		log.Error("", slog.String("error", err.Error()), slog.Int64("id", taskId.ID))
+		log.Error("", slog.String("error", err.Error()), slog.String("id", taskId.ID))
 		c.AbortWithStatusJSON(http.StatusNotFound, response.Error(err.Error()))
 		return
 	}
 	if err != nil {
-		log.Error("Failed to get task", slog.String("error", err.Error()), slog.Int64("id", taskId.ID))
+		log.Error("Failed to get task", slog.String("error", err.Error()), slog.String("id", taskId.ID))
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error("Failed to get task"))
 		return
 	}

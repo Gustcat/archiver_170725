@@ -1,5 +1,7 @@
 package model
 
+import "archive/zip"
+
 type Status string
 
 const (
@@ -9,18 +11,20 @@ const (
 )
 
 type TaskResult struct {
-	Status  Status   `json:"status"`
-	Archive *FileUrl `json:"archive"`
+	Status      Status   `json:"status"`
+	ArchiveLink *FileUrl `json:"archive"`
 }
 
 type Task struct {
-	Sources []FileUrl
-	Status  Status
-	Archive *FileUrl
+	Sources      []FileUrl
+	Status       Status
+	ArchiveLink  FileUrl
+	DownloadDown chan struct{}
+	ZipWriter    *zip.Writer
 }
 
 type TaskId struct {
-	ID int64 `json:"id"`
+	ID string `json:"id" uri:"id" binding:"required"`
 }
 
 type SourceRequest struct {

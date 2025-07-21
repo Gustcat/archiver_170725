@@ -30,7 +30,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	log.Info("Task created", slog.Int64("id", id))
+	log.Info("Task created", slog.String("id", id))
 
 	resp := &model.TaskId{ID: id}
 	c.JSON(http.StatusCreated, response.OK(resp))

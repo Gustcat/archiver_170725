@@ -3,43 +3,50 @@ package task
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Gustcat/archiver_170725/internal/model"
 	"github.com/Gustcat/archiver_170725/internal/repository"
 	"sync"
 )
 
 var ErrTaskNotFound = errors.New("task not found")
+var ErrTaskAlreadyExists = errors.New("task already exists")
 
 type Repo struct {
-	mu     sync.RWMutex
-	tasks  map[int64]*model.Task
-	lastID int64
+	mu    sync.RWMutex
+	tasks map[string]*model.Task
 }
 
 func NewRepo() repository.TaskRepository {
 	return &Repo{
-		tasks: make(map[int64]*model.Task),
+		tasks: make(map[string]*model.Task),
 	}
 }
 
-func (r *Repo) Create(ctx context.Context) (int64, error) {
+func (r *Repo) Create(ctx context.Context, id string, task *model.Task) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.lastID++
-	r.tasks[r.lastID] = &model.Task{
-		Sources: make([]model.FileUrl, 0, 3),
-		Status:  model.StatusNew,
+	if _, ok := r.tasks[id]; ok {
+		return ErrTaskAlreadyExists
 	}
 
-	return 0, nil
+	r.tasks[id] = task
+	for key, value := range r.tasks {
+		fmt.Printf("%+v", key)
+		fmt.Println()
+		fmt.Printf("%+v", value)
+	}
+	fmt.Printf("%+v", r.tasks)
+
+	return nil
 }
 
 func (r *Repo) Update(ctx context.Context, link string) error {
 	return nil
 }
 
-func (r *Repo) Get(ctx context.Context, id int64) (*model.Task, error) {
+func (r *Repo) Get(ctx context.Context, id string) (*model.Task, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
