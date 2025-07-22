@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Gustcat/archiver_170725/internal/logger"
 	"github.com/Gustcat/archiver_170725/internal/model"
+	taskRepo "github.com/Gustcat/archiver_170725/internal/repository/task"
 	"github.com/Gustcat/archiver_170725/internal/response"
 	taskService "github.com/Gustcat/archiver_170725/internal/service/task"
 	"github.com/gin-gonic/gin"
@@ -36,17 +37,25 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	err = h.service.Update(ctx, taskId.ID, sourceRequest.Source)
-	if errors.Is(err, taskService.ErrOverSourcesLimit) {
-		log.Error("", slog.String("error", err.Error()), slog.Int64("id", taskId.ID))
+	if errors.Is(err, taskRepo.ErrOverSourcesLimit) ||
+		errors.Is(err, taskService.UnsupportedFileType) ||
+		errors.Is(err, taskService.NoLinkConnection) {
+		log.Error("", slog.String("error", err.Error()),
+			slog.String("id", taskId.ID),
+			slog.String("sourceLink", sourceRequest.Source))
+		c.AbortWithStatusJSON(http.StatusBadRequest, response.Error(err.Error()))
+		return
+	}
+	if errors.Is(err, taskRepo.ErrTaskNotFound) {
+		log.Error("", slog.String("error", err.Error()), slog.String("id", taskId.ID))
 		c.AbortWithStatusJSON(http.StatusNotFound, response.Error(err.Error()))
 		return
 	}
-
 	if err != nil {
-		log.Error("Failed to add sources", slog.String("error", err.Error()), slog.Int64("id", taskId.ID))
+		log.Error("Failed to add sources", slog.String("error", err.Error()), slog.String("id", taskId.ID))
 		c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error("Failed to get task"))
 		return
 	}
 
-	c.JSON(http.StatusOK, response.OK(nil))
+	c.JSON(http.StatusOK, response.OK[*model.Task](nil))
 }

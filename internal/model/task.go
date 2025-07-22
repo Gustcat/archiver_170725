@@ -1,6 +1,10 @@
 package model
 
-import "archive/zip"
+import (
+	"archive/zip"
+	"os"
+	"sync"
+)
 
 type Status string
 
@@ -8,19 +12,25 @@ const (
 	StatusNew        Status = "new"
 	StatusInProgress Status = "in_progress"
 	StatusDone       Status = "done"
+	StatusFailed     Status = "failed"
 )
 
 type TaskResult struct {
-	Status      Status   `json:"status"`
-	ArchiveLink *FileUrl `json:"archive"`
+	Status              Status  `json:"status"`
+	ArchiveLink         *string `json:"archive,omitempty"`
+	ErrorSourcesMessage *string `json:"error_sources_message,omitempty"`
 }
 
 type Task struct {
-	Sources      []FileUrl
-	Status       Status
-	ArchiveLink  FileUrl
-	DownloadDown chan struct{}
-	ZipWriter    *zip.Writer
+	Mu              sync.RWMutex
+	Sources         []string
+	Status          Status
+	ArchiveLink     string
+	DownloadDown    []error
+	ZipWriter       *zip.Writer
+	Archive         *os.File
+	ZipWriterClosed bool
+	ArchiveClosed   bool
 }
 
 type TaskId struct {
@@ -28,5 +38,5 @@ type TaskId struct {
 }
 
 type SourceRequest struct {
-	Source FileUrl
+	Source string
 }

@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -33,8 +34,10 @@ func main() {
 	}
 
 	repo := taskRepo.NewRepo()
-
-	service := taskService.NewServ(repo, conf)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	service := taskService.NewServ(repo, conf, client)
 	h := handler.NewHandler(service)
 
 	log.Debug("Try to setup router")
@@ -47,6 +50,7 @@ func main() {
 		r.POST("/", h.Create)
 		r.GET("/:id", h.Get)
 		r.PATCH("/:id", h.Update)
+		r.GET("/:id/archive", h.GetArchive)
 	}
 
 	srv := &http.Server{

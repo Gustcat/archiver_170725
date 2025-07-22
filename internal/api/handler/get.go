@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"github.com/Gustcat/archiver_170725/internal/logger"
 	"github.com/Gustcat/archiver_170725/internal/model"
 	"github.com/Gustcat/archiver_170725/internal/repository/task"
@@ -27,7 +26,6 @@ func (h *Handler) Get(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, response.Error("invalid url-parameter: id"))
 		return
 	}
-	fmt.Printf("get-method id: %s", taskId.ID)
 
 	taskResult, err := h.service.Get(ctx, taskId.ID)
 	if errors.Is(err, task.ErrTaskNotFound) {
